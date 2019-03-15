@@ -62,6 +62,10 @@ attribute mlstrustedsubject;
 # i.e. files that can be read by lower and written by higher
 attribute mlstrustedobject;
 
+## MARKO
+# Domains that are allowed all permissions ("unconfined").
+attribute unconfineddomain;
+
 # All domains used for apps.
 attribute appdomain;
 

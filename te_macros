@@ -70,6 +70,17 @@ allow $1 $2:dir r_dir_perms;
 allow $1 $2:{ file lnk_file } r_file_perms;
 ')
 
+# //MARKO
+# for testing systemd etc. remove after rnd work!!
+#####################################
+# unconfined_domain(domain)
+# Allow the specified domain to do anything.
+#
+define(`unconfined_domain', `
+typeattribute $1 mlstrustedsubject;
+typeattribute $1 unconfineddomain;
+')
+
 #####################################
 # tmpfs_domain(domain)
 # Define and allow access to a unique type for
