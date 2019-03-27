@@ -1,0 +1,48 @@
+# wpa_supplicant - wpa_supplicant supplicant or equivalent
+type wpa_supplicant, domain;
+type wpa_supplicant_exec, exec_type, file_type;
+
+init_daemon_domain(wpa_supplicant)
+
+net_domain(wpa_supplicant)
+
+allow wpa_supplicant kernel:system module_request;
+allow wpa_supplicant self:capability { setuid net_admin setgid net_raw };
+allow wpa_supplicant cgroup:dir create_dir_perms;
+allow wpa_supplicant self:netlink_route_socket nlmsg_write;
+allow wpa_supplicant self:netlink_socket create_socket_perms;
+allow wpa_supplicant self:packet_socket create_socket_perms;
+allow wpa_supplicant wifi_data_file:dir create_dir_perms;
+allow wpa_supplicant wifi_data_file:file create_file_perms;
+allow wpa_supplicant self:unix_dgram_socket ioctl;
+unix_socket_send(wpa_supplicant, system_wpa, system_server)
+
+binder_use(wpa_supplicant)
+
+# Create a socket for receiving info from wpa
+type_transition wpa_supplicant wifi_data_file:dir wpa_socket "sockets";
+allow wpa_supplicant wpa_socket:dir create_dir_perms;
+allow wpa_supplicant wpa_socket:sock_file create_file_perms;
+
+use_keystore(wpa_supplicant)
+
+# wpa_supplicant (wifi) has a restricted set of permissions from the default.
+allow wpa_supplicant keystore:keystore_key {
+	get
+	sign
+	verify
+};
+
+# Allow wpa_cli to work. wpa_cli creates a socket in
+# /data/misc/wifi/sockets which wpa_supplicant supplicant communicates with.
+userdebug_or_eng(`
+  unix_socket_send(wpa_supplicant, wpa_supplicant, su)
+')
+
+###
+### neverallow rules
+###
+
+# wpa_supplicant should not trust any data from sdcards
+neverallow wpa_supplicant sdcard_type:dir ~getattr;
+neverallow wpa_supplicant sdcard_type:file *;
