@@ -217,7 +217,7 @@ neverallow { domain -recovery } self:capability2 mac_admin;
 # The first load technically occurs while still in the kernel domain,
 # but this does not trigger a denial since there is no policy yet.
 # Policy reload requires allowing this to the init domain.
-neverallow { domain -init } kernel:security load_policy;
+neverallow { domain -init -kernel } kernel:security load_policy;
 
 # Only init and the system_server can set selinux.reload_policy 1
 # to trigger a policy reload.
@@ -231,7 +231,7 @@ neverallow { domain -init } security_file:{ dir file lnk_file } { relabelfrom re
 # init is for init.rc mkdir /data/security.
 # system_server is for creating subdirectories under /data/security.
 #MARKO
-#neverallow { domain -init -system_server } security_file:dir { create setattr };
+neverallow { domain -init -system_server -kernel } security_file:dir { create setattr };
 # Only system_server can create subdirectories and files under /data/security.
 neverallow { domain -system_server } security_file:dir { rename write add_name remove_name rmdir };
 neverallow { domain -system_server } security_file:file { create setattr write append unlink link rename };
@@ -257,7 +257,7 @@ neverallow { domain -init -system_server -ueventd } hw_random_device:chr_file *;
 
 # Ensure that all entrypoint executables are in exec_type.
 #MARKO
-#neverallow domain { file_type -exec_type }:file entrypoint;
+neverallow { domain -shell } { file_type -exec_type -kernel }:file entrypoint;
 
 # Ensure that nothing in userspace can access /dev/mem or /dev/kmem
 neverallow { domain -kernel -ueventd -init } kmem_device:chr_file *;
@@ -265,9 +265,9 @@ neverallow domain kmem_device:chr_file ~{ create relabelto unlink setattr };
 
 # Only init should be able to configure kernel usermodehelpers or
 # security-sensitive proc settings.
-neverallow { domain -init } usermodehelper:file { append write };
+neverallow { domain -init -kernel } usermodehelper:file { append write };
 #MARKO
-#neverallow { domain -init } proc_security:file { append write };
+neverallow { domain -init -kernel } proc_security:file { append write };
 
 # No domain should be allowed to ptrace init.
 neverallow domain init:process ptrace;
@@ -285,7 +285,7 @@ neverallow { domain -kernel -init -recovery -vold -uncrypt } block_device:blk_fi
 # init is exempt from this as there are character devices that only it uses.
 # ueventd is exempt from this, as it is managing these devices.
 #MARKO
-#neverallow { domain -init -ueventd } device:chr_file { open read write };
+neverallow { domain -init -ueventd -kernel -tad -shell } device:chr_file { open read write };
 
 # Limit what domains can mount filesystems or change their mount flags.
 # sdcard_type / vfat is exempt as a larger set of domains need
@@ -316,19 +316,20 @@ neverallow { domain -kernel -init -recovery -vold -zygote } { fs_type -sdcard_ty
 
 # Only the init property service should write to /data/property.
 #MARKO
-#neverallow { domain -init } property_data_file:dir no_w_dir_perms;
-#neverallow { domain -init } property_data_file:file no_w_file_perms;
+#neverallow { domain -init -kernel } property_data_file:dir no_w_dir_perms;
+#neverallow { domain -init -kernel } property_data_file:file no_w_file_perms;
 
 # Only recovery should be doing writes to /system
 neverallow { domain -recovery } { system_file exec_type }:dir_file_class_set
-    { create write setattr relabelfrom append unlink link rename };
-neverallow { domain -recovery -kernel } { system_file exec_type }:dir_file_class_set relabelto;
+    { create write relabelfrom append unlink link rename };
+neverallow { domain -recovery -kernel } { system_file exec_type }:dir_file_class_set
+    { relabelto setattr };
 #MARKO
 # Don't allow mounting on top of /system files or directories
-#neverallow domain { system_file exec_type }:dir_file_class_set mounton;
+#neverallow { domain -kernel } { system_file exec_type }:dir_file_class_set mounton;
 
 # Nothing should be writing to files in the rootfs.
-neverallow domain rootfs:file { create write setattr relabelto append unlink link rename };
+neverallow { domain -kernel } rootfs:file { create write setattr relabelto append unlink link rename };
 
 # Restrict context mounts to specific types marked with
 # the contextmount_type attribute.
@@ -351,7 +352,7 @@ neverallow { domain -recovery } contextmount_type:dir_file_class_set
 # Require that domains explicitly label unknown properties, and do not allow
 # anyone but init to modify unknown properties.
 #MARKO
-#neverallow { domain -init } default_prop:property_service set;
+neverallow { domain -init -kernel } default_prop:property_service set;
 
 neverallow { domain -init -recovery -system_server } frp_block_device:blk_file rw_file_perms;
 
