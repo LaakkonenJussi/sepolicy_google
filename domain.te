@@ -176,8 +176,7 @@ allow unconfineddomain unconfineddomain:dbus send_msg;
 ###
 
 # Do not allow any domain other than init or recovery to create unlabeled files.
-#MARKO
-#neverallow { domain -init -recovery } unlabeled:dir_file_class_set create;
+neverallow { domain -init -recovery -kernel } unlabeled:dir_file_class_set create;
 
 # Limit ability to ptrace or read sensitive /proc/pid files of processes
 # with other UIDs to these whitelisted domains.
@@ -232,7 +231,6 @@ neverallow { domain -init } security_file:{ dir file lnk_file } { relabelfrom re
 # Only init and system_server can create/setattr directories with this type.
 # init is for init.rc mkdir /data/security.
 # system_server is for creating subdirectories under /data/security.
-#MARKO
 neverallow { domain -init -system_server -kernel } security_file:dir { create setattr };
 # Only system_server can create subdirectories and files under /data/security.
 neverallow { domain -system_server } security_file:dir { rename write add_name remove_name rmdir };
@@ -258,7 +256,6 @@ neverallow { domain -init } kernel:security setsecparam;
 neverallow { domain -init -system_server -ueventd } hw_random_device:chr_file *;
 
 # Ensure that all entrypoint executables are in exec_type.
-#MARKO
 neverallow { domain -shell } { file_type -exec_type -kernel }:file entrypoint;
 
 # Ensure that nothing in userspace can access /dev/mem or /dev/kmem
@@ -268,7 +265,6 @@ neverallow domain kmem_device:chr_file ~{ create relabelto unlink setattr };
 # Only init should be able to configure kernel usermodehelpers or
 # security-sensitive proc settings.
 neverallow { domain -init -kernel } usermodehelper:file { append write };
-#MARKO
 neverallow { domain -init -kernel } proc_security:file { append write };
 
 # No domain should be allowed to ptrace init.
@@ -286,7 +282,6 @@ neverallow { domain -kernel -init -recovery -vold -uncrypt } block_device:blk_fi
 # Rather force a relabel to a more specific type.
 # init is exempt from this as there are character devices that only it uses.
 # ueventd is exempt from this, as it is managing these devices.
-#MARKO
 neverallow { domain -init -ueventd -kernel -tad -shell } device:chr_file { open read write };
 
 # Limit what domains can mount filesystems or change their mount flags.
@@ -298,37 +293,37 @@ neverallow { domain -kernel -init -recovery -vold -zygote } { fs_type -sdcard_ty
 # Assert that, to the extent possible, we're not loading executable content from
 # outside the rootfs or /system partition except for a few whitelisted domains.
 #
-#MARKO
-#neverallow {
-#    domain
-#    -appdomain
-#    -dumpstate
-#    -shell
-#    userdebug_or_eng(`-su')
-#    -system_server
-#    -zygote
-#} { file_type -system_file -exec_type }:file execute;
 
-#MARKO
-#neverallow {
-#    domain
-#    -appdomain # for oemfs
-#    -recovery # for /tmp/update_binary in tmpfs
-#} { fs_type -rootfs }:file execute;
+neverallow {
+    domain
+    -appdomain
+    -dumpstate
+    -shell
+    userdebug_or_eng(`-su')
+    -system_server
+    -zygote
+     -kernel
+} { file_type -system_file -exec_type }:file execute;
+
+
+neverallow {
+    domain
+    -appdomain # for oemfs
+    -recovery # for /tmp/update_binary in tmpfs
+    -kernel
+} { fs_type -rootfs }:file execute;
 
 # Only the init property service should write to /data/property.
-#MARKO
-#neverallow { domain -init -kernel } property_data_file:dir no_w_dir_perms;
-#neverallow { domain -init -kernel } property_data_file:file no_w_file_perms;
+neverallow { domain -init -kernel } property_data_file:dir no_w_dir_perms;
+neverallow { domain -init -kernel } property_data_file:file no_w_file_perms;
 
 # Only recovery should be doing writes to /system
 neverallow { domain -recovery } { system_file exec_type }:dir_file_class_set
     { create write relabelfrom append unlink link rename };
 neverallow { domain -recovery -kernel } { system_file exec_type }:dir_file_class_set
     { relabelto setattr };
-#MARKO
 # Don't allow mounting on top of /system files or directories
-#neverallow { domain -kernel } { system_file exec_type }:dir_file_class_set mounton;
+neverallow { domain -kernel } { system_file exec_type }:dir_file_class_set mounton;
 
 # Nothing should be writing to files in the rootfs.
 neverallow { domain -kernel } rootfs:file { create write setattr relabelto append unlink link rename };
@@ -353,7 +348,6 @@ neverallow { domain -recovery } contextmount_type:dir_file_class_set
 
 # Require that domains explicitly label unknown properties, and do not allow
 # anyone but init to modify unknown properties.
-#MARKO
 neverallow { domain -init -kernel } default_prop:property_service set;
 
 neverallow { domain -init -recovery -system_server } frp_block_device:blk_file rw_file_perms;
@@ -376,14 +370,15 @@ neverallow {
   -installd
   -dex2oat
 } dalvikcache_data_file:file no_w_file_perms;
-#MARKO
-#neverallow {
-#  domain
-#  -init
-#  -installd
-#  -dex2oat
-#  -zygote
-#} dalvikcache_data_file:dir no_w_dir_perms;
+
+neverallow {
+  domain
+  -init
+  -installd
+  -dex2oat
+  -zygote
+  -kernel
+} dalvikcache_data_file:dir no_w_dir_perms;
 
 # Only system_server should be able to send commands via the zygote socket
 neverallow { domain -zygote -system_server } zygote:unix_stream_socket connectto;
@@ -405,8 +400,7 @@ neverallow { domain -system_server } zygote_socket:sock_file write;
 # that, even assuming only non-buggy and non-malicious code, it is very likely
 # that over time, the kernel global tables used to implement SysV IPCs will fill
 # up.
-#MARKO 
-#neverallow domain domain:{ shm sem msg msgq } *;
+neverallow { domain -kernel } domain:{ shm sem msg msgq } *;
 
 # Do not mount on top of symlinks, fifos, or sockets.
 # Feature parity with Chromium LSM.
@@ -433,7 +427,7 @@ neverallow domain {
 
 # TODO: prohibit non-zygote spawned processes from using shared libraries
 # with text relocations. b/20013628 .
-# neverallow { domain -appdomain } file_type:file execmod;
+neverallow { domain -appdomain } file_type:file execmod;
 
 neverallow { domain -init } proc:{ file dir } mounton;
 
@@ -469,14 +463,14 @@ neverallow installd system_data_file:file ~{ r_file_perms relabelfrom unlink };
 # permissible for the "shell user". If you need a process to exec a shell
 # script with differing privilege, define a domain and set up a transition.
 #
-#MARKO
-#neverallow {
-#  domain
-#  -adbd
-#  -init
-#  -runas
-#  -zygote
-#} shell:process { transition dyntransition };
+neverallow {
+  domain
+  -adbd
+  -init
+  -runas
+  -zygote
+  -kernel
+} shell:process { transition dyntransition };
 
 # Minimize read access to shell- or app-writable symlinks.
 # This is to prevent malicious symlink attacks.
