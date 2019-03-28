@@ -169,6 +169,8 @@ allow domain security_file:lnk_file r_file_perms;
 allow domain asec_public_file:file r_file_perms;
 allow domain { asec_public_file asec_apk_file }:dir r_dir_perms;
 
+allow unconfineddomain unconfineddomain:dbus send_msg;
+
 ###
 ### neverallow rules
 ###

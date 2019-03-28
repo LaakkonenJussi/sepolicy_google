@@ -21,9 +21,12 @@ binder_use(wpa)
 # Create a socket for receiving info from wpa
 type_transition wpa wifi_data_file:dir wpa_socket "sockets";
 allow wpa wpa_socket:dir create_dir_perms;
-allow wpa wpa_socket:sock_file create_file_perms;
+allow wpa wpa_socket:sock_file { create_file_perms ioctl };
 
 use_keystore(wpa)
+allow wpa wpa_socket:{ unix_dgram_socket unix_stream_socket } unpriv_unix_sock_ioctls;
+allow kernel wpa:unix_dgram_socket ioctl;
+allow wpa kernel:unix_dgram_socket ioctl;
 
 # WPA (wifi) has a restricted set of permissions from the default.
 allow wpa keystore:keystore_key {

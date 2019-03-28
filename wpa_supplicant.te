@@ -25,6 +25,9 @@ allow wpa_supplicant wpa_socket:dir create_dir_perms;
 allow wpa_supplicant wpa_socket:sock_file create_file_perms;
 
 use_keystore(wpa_supplicant)
+allow wpa_supplicant wpa_supplicant_socket:{ unix_dgram_socket unix_stream_socket } unpriv_unix_sock_ioctls;
+allow kernel wpa_supplicant:unix_dgram_socket ioctl;
+allow wpa_supplicant kernel:unix_dgram_socket ioctl;
 
 # wpa_supplicant (wifi) has a restricted set of permissions from the default.
 allow wpa_supplicant keystore:keystore_key {
