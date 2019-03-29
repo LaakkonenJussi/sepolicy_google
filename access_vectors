@@ -393,6 +393,10 @@ class system
 	syslog_mod
 	syslog_console
 	module_request
+	status
+	start
+	stop
+	reboot
 }
 
 #
@@ -925,4 +929,16 @@ class drmservice {
 	decrypt
 	finalizeDecryptUnit
 	pread
+}
+
+# systemd service
+class service {
+	start
+	stop
+	status
+	reload
+	kill
+	load
+	enable
+	disable
 }

@@ -146,4 +146,7 @@ class keystore_key              # userspace
 class debuggerd                 # userspace
 
 class drmservice                # userspace
+
+# SystemD service
+class service
 # FLASK
