@@ -25,4 +25,4 @@ allow gatekeeperd gatekeeper_data_file:dir rw_dir_perms;
 allow gatekeeperd gatekeeper_data_file:file create_file_perms;
 
 #MARKO --> logcat policy set
-#neverallow { domain -gatekeeperd } gatekeeper_service:service_manager add;
+neverallow { domain -gatekeeperd -kernel } gatekeeper_service:service_manager add;

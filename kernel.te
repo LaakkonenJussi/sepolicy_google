@@ -75,7 +75,6 @@ neverallow domain kernel:process { transition };
 #   some other program.  Fix your init.rc file.
 # - You are running an exploit which switched to the init task credentials
 #   and is then trying to exec a shell or other program.  You lose!
-#MARKO
-#neverallow kernel { file_type fs_type -rootfs }:file { entrypoint execute_no_trans };
+# TODO: figure out does removing of execute_no_trans cause any problems
 neverallow kernel { file_type fs_type -rootfs }:file { entrypoint };
 

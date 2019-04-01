@@ -180,18 +180,17 @@ neverallow { domain -init -recovery -kernel } unlabeled:dir_file_class_set creat
 
 # Limit ability to ptrace or read sensitive /proc/pid files of processes
 # with other UIDs to these whitelisted domains.
-#MARKO
-#neverallow {
-#  domain
-#  -debuggerd
-#  -vold
-#  -dumpstate
-#  -system_server
-#  userdebug_or_eng(`-procrank')
-#  userdebug_or_eng(`-perfprofd')
-#} self:capability sys_ptrace;
+neverallow {
+  domain
+  -debuggerd
+  -vold
+  -dumpstate
+  -system_server
+  -kernel
+  userdebug_or_eng(`-procrank')
+  userdebug_or_eng(`-perfprofd')
+} self:capability sys_ptrace;
 
-#MARKO added systemd_tmpfiles to lista since it has mknod policy
 # Limit device node creation to these whitelisted domains.
 neverallow {
   domain
@@ -343,8 +342,7 @@ neverallow { domain -recovery } contextmount_type:dir_file_class_set
 # system_app_service rather than the generic type.
 # New service_types are defined in service.te and new mappings
 # from service name to service_type are defined in service_contexts.
-#MARKO  --> logcat policy add
-#neverallow domain default_android_service:service_manager add;
+neverallow { domain -kernel } default_android_service:service_manager add;
 
 # Require that domains explicitly label unknown properties, and do not allow
 # anyone but init to modify unknown properties.
