@@ -226,7 +226,7 @@ neverallow { domain -init -system_server } security_prop:property_service set;
 # Only init and system_server can write to /data/security, where runtime
 # policy updates live.
 # Only init can relabel /data/security (for init.rc restorecon_recursive /data).
-neverallow { domain -init } security_file:{ dir file lnk_file } { relabelfrom relabelto };
+neverallow { domain -init -kernel } security_file:{ dir file lnk_file } { relabelfrom relabelto };
 # Only init and system_server can create/setattr directories with this type.
 # init is for init.rc mkdir /data/security.
 # system_server is for creating subdirectories under /data/security.
